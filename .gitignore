@@ -1,0 +1,14 @@
+data/
+__pycache__/
+*.pyc
+*.log
+shot_*.png
+crop_*.png
+tmp.json
+ov*.json
+all*.json
+sc.json
+st.json
+bb.json
+q.txt
+batch.txt

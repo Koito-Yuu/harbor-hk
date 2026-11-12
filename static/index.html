@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Harbor · 港股投研台</title>
+<script>
+  try {
+    const q = new URLSearchParams(location.search).get('theme');
+    const t = (q === 'light' || q === 'dark') ? q : (localStorage.getItem('harbor-theme') || 'dark');
+    document.documentElement.dataset.theme = t;
+  } catch (e) {}
+</script>
+<meta name="description" content="港股市场、回购、估值与南向资金的一体化投研面板">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23070b14'/><path d='M20 68 38 44 52 58 80 26' stroke='%234ade80' stroke-width='9' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<link rel="stylesheet" href="/static/css/app.css?v=3.1">
+<link rel="stylesheet" href="/static/css/theme.css?v=3.1">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-buyback" viewBox="0 0 24 24"><path d="M4 8a8 8 0 0 1 13.6-2.7L20 8"/><path d="M20 4v4h-4"/><path d="M20 16a8 8 0 0 1-13.6 2.7L4 16"/><path d="M4 20v-4h4"/></symbol>
+  <symbol id="i-stock" viewBox="0 0 24 24"><path d="M3 20h18"/><path d="M5 16l4-6 4 3 6-8"/><circle cx="19" cy="5" r="1.6"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 5h16l-6.5 7.2V20l-3 1v-8.8L4 5z"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M6.1 8a7 7 0 0 1 11.6-1.5L20 9M4 15l2.3 2.5A7 7 0 0 0 18 16"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.5" r=".8" fill="currentColor"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/><path d="M4 11.5v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.4-3 7.5-7 9-4-1.5-7-4.6-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.2M12 19.8V22M2 12h2.2M19.8 12H22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 14.3A8.5 8.5 0 0 1 9.7 3.5 8.5 8.5 0 1 0 20.5 14.3z"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.6l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.6z"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.4 3.6 5.3 3.6 8.5s-1.2 6.1-3.6 8.5M12 3.5C9.6 5.9 8.4 8.8 8.4 12s1.2 6.1 3.6 8.5"/></symbol>
+  <symbol id="i-radar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12l6-6"/><circle cx="12" cy="12" r="1" fill="currentColor"/></symbol>
+  <symbol id="i-short" viewBox="0 0 24 24"><path d="M3 7h18"/><path d="M5 7l4 6 4-3 6 8"/><path d="M19 18h-4v-4"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M8 11l4 4 4-4"/><path d="M5 19h14"/></symbol>
+</svg>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"><span></span><span></span><span></span></div>
+      <div>
+        <div class="brand-name">HARBOR</div>
+        <div class="brand-sub">港股投研台</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <button class="nav-item active" data-view="overview"><svg><use href="#i-grid"/></svg><span>市场总览</span><em>01</em></button>
+      <button class="nav-item" data-view="buyback"><svg><use href="#i-buyback"/></svg><span>回购雷达</span><em>02</em></button>
+      <button class="nav-item" data-view="short"><svg><use href="#i-short"/></svg><span>卖空透视</span><em>03</em></button>
+      <button class="nav-item" data-view="signals"><svg><use href="#i-radar"/></svg><span>信号中心</span><em>04</em></button>
+      <button class="nav-item" data-view="stock"><svg><use href="#i-stock"/></svg><span>个股透视</span><em>05</em></button>
+      <button class="nav-item" data-view="screener"><svg><use href="#i-filter"/></svg><span>机会筛选</span><em>06</em></button>
+      <button class="nav-item" data-view="macro"><svg><use href="#i-globe"/></svg><span>宏观环境</span><em>07</em></button>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="data-state">
+        <span class="dot"></span>
+        <div>
+          <div class="ds-title">公开数据 · 本地缓存</div>
+          <div class="ds-sub" id="sideDataStatus">正在连接…</div>
+        </div>
+      </div>
+      <div class="sidebar-links">
+        <button id="aboutBtn2">数据与方法</button>
+        <span>v1.0</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="page-head">
+        <h1 id="pageTitle">市场总览</h1>
+        <span id="pageSub">Market command deck</span>
+      </div>
+      <div class="ticker-strip" id="tickerStrip"></div>
+      <div class="top-actions">
+        <div class="market-pill" id="marketPill"><i></i><span>—</span></div>
+        <button class="icon-btn watch-btn" id="watchBtn" title="我的自选"><svg><use href="#i-star"/></svg><span id="watchCount">0</span></button>
+        <div class="sync-control" id="syncControl">
+          <button class="sync-btn" id="syncBtn" title="快速同步：行情 / 回购 / 指数 / 南向 / 淡仓">
+            <svg class="sync-ico"><use href="#i-refresh"/></svg>
+            <span id="syncBtnText">同步</span>
+          </button>
+          <button class="sync-caret" id="syncMenuBtn" title="同步选项"><svg><use href="#i-down"/></svg></button>
+          <div class="sync-menu" id="syncMenu" hidden>
+            <button data-sync-mode="quick"><b>快速同步</b><span>行情、回购、指数、南向、淡仓</span></button>
+            <button data-sync-mode="full"><b>全量同步</b><span>额外更新财务与个股 K 线</span></button>
+            <div class="sync-menu-foot" id="syncMenuFoot">上次同步 —</div>
+          </div>
+        </div>
+        <button class="icon-btn" id="themeBtn" title="切换亮/暗主题"><svg><use href="#i-moon"/></svg></button>
+        <button class="ghost-btn" id="aboutBtn"><svg><use href="#i-info"/></svg>数据说明</button>
+      </div>
+    </header>
+
+    <div class="sync-banner" id="syncBanner" hidden>
+      <div class="sync-text"><span class="spin"></span><span id="syncMessage">正在同步数据…</span></div>
+      <div class="sync-track"><div id="syncBar"></div></div>
+      <span id="syncPct">0%</span>
+    </div>
+
+    <div id="errorBanner" class="error-banner" hidden></div>
+
+    <!-- ============ 总览 ============ -->
+    <section class="view" id="view-overview">
+      <div class="index-cluster" id="indexCards">
+        <div class="panel index-card skeleton"></div><div class="panel index-card skeleton"></div><div class="panel index-card skeleton"></div>
+      </div>
+
+      <div class="panel narrative-panel" id="narrativePanel">
+        <div class="panel-head">
+          <div><span class="eyebrow">DAILY BRIEF</span><h2>今日盘面速读</h2></div>
+          <span class="asof" id="overviewAsOf"></span>
+        </div>
+        <div class="narrative-list" id="narrative"></div>
+      </div>
+
+      <div class="grid">
+        <div class="panel span7">
+          <div class="panel-head">
+            <div><span class="eyebrow">LIQUIDITY</span><h2>恒指与南向资金</h2></div>
+            <div class="seg" id="flowRange">
+              <button data-n="60">3M</button><button data-n="120" class="on">6M</button>
+            </div>
+          </div>
+          <div class="chart h300" id="chartFlow"></div>
+          <div class="chart-foot" id="flowFoot"></div>
+        </div>
+
+        <div class="panel span5">
+          <div class="panel-head">
+            <div><span class="eyebrow">BUYBACK INTENSITY</span><h2>回购强度</h2></div>
+            <span class="asof" id="buybackAsOf"></span>
+          </div>
+          <div class="buyback-hero" id="buybackHero"></div>
+          <div class="chart h170" id="chartBuybackMini"></div>
+          <div class="chart-foot" id="buybackFoot"></div>
+        </div>
+
+        <div class="panel span4">
+          <div class="panel-head"><div><span class="eyebrow">BREADTH</span><h2>市场广度</h2></div><span class="asof" id="breadthAsOf"></span></div>
+          <div class="breadth-wrap">
+            <div class="chart h190" id="chartBreadth"></div>
+            <div class="breadth-stats" id="breadthStats"></div>
+          </div>
+        </div>
+
+        <div class="panel span4">
+          <div class="panel-head"><div><span class="eyebrow">VALUATION</span><h2>估值分布</h2></div><span class="asof">PE · 全市场</span></div>
+          <div class="chart h190" id="chartPe"></div>
+          <div class="mini-stats" id="valuationStats"></div>
+        </div>
+
+        <div class="panel span4">
+          <div class="panel-head"><div><span class="eyebrow">SECTORS</span><h2>行业表现</h2></div><span class="asof">核心池等权</span></div>
+          <div class="sector-list" id="sectorList"></div>
+        </div>
+
+        <div class="panel span7">
+          <div class="panel-head">
+            <div><span class="eyebrow">LATEST REPURCHASES</span><h2>最新回购榜</h2></div>
+            <button class="link-btn" data-goto="buyback">查看全部 <svg><use href="#i-arrow"/></svg></button>
+          </div>
+          <div id="topBuybackTable" class="table-host"></div>
+        </div>
+
+        <div class="panel span5">
+          <div class="panel-head"><div><span class="eyebrow">MOVERS</span><h2>盘面异动</h2></div>
+            <div class="seg small" id="moverTabs"><button data-k="gainers" class="on">涨幅</button><button data-k="losers">跌幅</button><button data-k="active">成交</button></div>
+          </div>
+          <div id="moversBody" class="movers"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 信号中心 ============ -->
+    <section class="view" id="view-signals" hidden>
+      <div class="kpi-row" id="signalKpis"></div>
+      <div class="grid">
+        <div class="panel span7">
+          <div class="panel-head">
+            <div><span class="eyebrow">MONTHLY REPURCHASE</span><h2>月度回购节奏</h2></div>
+            <span class="asof" id="signalMonthlyAsOf"></span>
+          </div>
+          <div class="chart h260" id="chartMonthly"></div>
+          <div class="chart-foot" id="monthlyFoot"></div>
+        </div>
+        <div class="panel span5">
+          <div class="panel-head"><div><span class="eyebrow">SIGNAL MAP</span><h2>信号分布</h2></div><span class="asof">7 类信号</span></div>
+          <div class="signal-overview" id="signalOverview"></div>
+        </div>
+      </div>
+      <div class="grid" id="signalGrid"></div>
+    </section>
+
+    <!-- ============ 回购 ============ -->
+    <section class="view" id="view-buyback" hidden>
+      <div class="kpi-row" id="buybackKpis"></div>
+
+      <div class="grid">
+        <div class="panel span8">
+          <div class="panel-head">
+            <div><span class="eyebrow">REPURCHASE FLOW</span><h2>回购金额 × 恒生指数</h2></div>
+            <div class="seg" id="bbRange">
+              <button data-n="30">30D</button><button data-n="60" class="on">60D</button><button data-n="90">90D</button><button data-n="120">120D</button>
+            </div>
+          </div>
+          <div class="chart h340" id="chartBuyback"></div>
+          <div class="chart-foot" id="bbChartFoot"></div>
+        </div>
+
+        <div class="panel span4">
+          <div class="panel-head"><div><span class="eyebrow">REPURCHASE CALENDAR</span><h2>回购日历</h2></div><span class="asof">近 12 周</span></div>
+          <div class="bb-calendar" id="bbCalendar"></div>
+          <div class="cal-legend"><span>低</span><i class="lv1"></i><i class="lv2"></i><i class="lv3"></i><i class="lv4"></i><span>高</span><em>单位：亿港元</em></div>
+          <div class="cal-side" id="bbCalSide"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div><span class="eyebrow">REPURCHASE SCREENER</span><h2>回购明细</h2></div>
+          <div class="panel-tools">
+            <span class="asof" id="bbMeta"></span>
+            <button class="mini-btn" id="exportBuyback"><svg><use href="#i-download"/></svg>CSV</button>
+          </div>
+        </div>
+        <div class="toolbar">
+          <div class="seg" id="bbPeriod">
+            <button data-p="1">最新一日</button><button data-p="20" class="on">近20日</button><button data-p="60">近60日</button><button data-p="0">年内</button>
+          </div>
+          <label class="field compact"><span>行业</span><select id="bbSector"></select></label>
+          <label class="field compact"><span>排序</span><select id="bbSort">
+            <option value="amount">回购金额</option><option value="yield">回购占市值</option>
+            <option value="days">回购天数</option><option value="turnover">占成交额</option>
+            <option value="premium">现价/回购均价</option><option value="mcap">市值</option>
+          </select></label>
+          <label class="field compact"><span>最小市值(亿)</span><input id="bbMinMcap" type="number" value="30" min="0" step="10"></label>
+          <label class="check"><input type="checkbox" id="bbBelowVwap"><span>仅看现价低于回购均价</span></label>
+          <label class="search compact"><svg><use href="#i-search"/></svg><input id="bbSearch" placeholder="名称 / 代码"></label>
+          <button class="primary-btn" id="bbApply">应用</button>
+        </div>
+        <div id="bbTable" class="table-host"></div>
+      </div>
+    </section>
+
+    <!-- ============ 卖空 ============ -->
+    <section class="view" id="view-short" hidden>
+      <div class="kpi-row" id="shortKpis"></div>
+      <div class="grid">
+        <div class="panel span8">
+          <div class="panel-head">
+            <div><span class="eyebrow">SHORT INTEREST</span><h2>淡仓市值 × 占市值比</h2></div>
+            <div class="seg" id="shortRange">
+              <button data-n="26">6M</button><button data-n="52" class="on">1Y</button><button data-n="104">2Y</button>
+            </div>
+          </div>
+          <div class="chart h340" id="chartShort"></div>
+          <div class="chart-foot" id="shortChartFoot"></div>
+        </div>
+        <div class="panel span4">
+          <div class="panel-head"><div><span class="eyebrow">LONG-SHORT HEDGE</span><h2>多空对冲观察</h2></div><span class="asof">回购 × 淡仓</span></div>
+          <div class="hedge-list" id="hedgeList"></div>
+          <div class="holder-note" style="margin-top:10px">近 4 周有场内回购、同时淡仓占市值 ≥ 8%。多空博弈激烈，关注回购能否承接抛压。</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div><span class="eyebrow">SHORT INTEREST SCREENER</span><h2>淡仓明细</h2></div>
+          <div class="panel-tools">
+            <span class="asof" id="shortMeta"></span>
+            <button class="mini-btn" id="exportShort"><svg><use href="#i-download"/></svg>CSV</button>
+          </div>
+        </div>
+        <div class="toolbar">
+          <div class="seg" id="shortPeriod">
+            <button data-p="1">最新一期</button><button data-p="4" class="on">近4周</button><button data-p="13">近13周</button><button data-p="0">年内</button>
+          </div>
+          <label class="field compact"><span>行业</span><select id="shortSector"></select></label>
+          <label class="field compact"><span>排序</span><select id="shortSort">
+            <option value="ratio">淡仓占市值比</option><option value="value">淡仓市值</option>
+            <option value="change">淡仓规模变化</option><option value="buyback">回购金额</option>
+            <option value="mcap">市值</option><option value="day_change">当日涨幅</option>
+          </select></label>
+          <label class="field compact"><span>最小市值(亿)</span><input id="shortMinMcap" type="number" value="30" min="0" step="10"></label>
+          <label class="field compact"><span>淡仓占比≥(%)</span><input id="shortMinRatio" type="number" value="0" min="0" step="1"></label>
+          <label class="check"><input type="checkbox" id="shortHedge"><span>仅看多空对冲</span></label>
+          <label class="search compact"><svg><use href="#i-search"/></svg><input id="shortSearch" placeholder="名称 / 代码"></label>
+          <button class="primary-btn" id="shortApply">应用</button>
+        </div>
+        <div id="shortTable" class="table-host"></div>
+      </div>
+    </section>
+
+    <!-- ============ 宏观 ============ -->
+    <section class="view" id="view-macro" hidden>
+      <div class="kpi-row" id="macroKpis"></div>
+      <div class="grid">
+        <div class="panel span12">
+          <div class="panel-head"><div><span class="eyebrow">HK LIQUIDITY × US RATES</span><h2>总结余与美债利率</h2></div><span class="asof" id="macroAsOf"></span></div>
+          <div class="chart h300" id="chartMacroLiquidity"></div>
+          <div class="chart-foot" id="macroLiquidityFoot"></div>
+        </div>
+        <div class="panel span4">
+          <div class="panel-head"><div><span class="eyebrow">US CURVE</span><h2>美债收益率曲线</h2></div><span class="asof">近一年</span></div>
+          <div class="chart h220" id="chartYieldCurve"></div>
+        </div>
+        <div class="panel span4">
+          <div class="panel-head"><div><span class="eyebrow">HSI × UST10Y</span><h2>恒指与美债10Y</h2></div><span class="asof">近一年</span></div>
+          <div class="chart h220" id="chartHsiUs"></div>
+        </div>
+        <div class="panel span4">
+          <div class="panel-head"><div><span class="eyebrow">HIBOR CURVE</span><h2>HIBOR 期限结构</h2></div><span class="asof" id="hiborAsOf"></span></div>
+          <div class="chart h220" id="chartHiborCurve"></div>
+        </div>
+        <div class="panel span7">
+          <div class="panel-head"><div><span class="eyebrow">CROSS-ASSET SIGNALS</span><h2>跨市场信号</h2></div><span class="asof">利率 · 流动性 · 汇率 · 估值</span></div>
+          <div id="macroSignals" class="macro-signals"></div>
+        </div>
+        <div class="panel span5">
+          <div class="panel-head"><div><span class="eyebrow">IMPLICATIONS</span><h2>对港股的含义</h2></div></div>
+          <div id="macroNarrative" class="macro-narrative"></div>
+          <div class="holder-note" style="margin-top:12px">数据：HKMA、HKAB、FRED。港元总结余单位为亿港元；HIBOR 为最新定盘曲线。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 个股 ============ -->
+    <section class="view" id="view-stock" hidden>
+      <div class="stock-searchbar">
+        <div class="stock-search">
+          <svg><use href="#i-search"/></svg>
+          <input id="stockSearch" placeholder="输入股票代码或名称，例如 00700 / 腾讯 / 泡泡玛特" autocomplete="off">
+          <kbd>⌘K</kbd>
+          <div class="suggest" id="stockSuggest" hidden></div>
+        </div>
+        <div class="quick-chips" id="quickChips">
+          <button data-code="00700">腾讯</button><button data-code="09988">阿里</button>
+          <button data-code="09992">泡泡玛特</button><button data-code="00005">汇丰</button>
+          <button data-code="01810">小米</button><button data-code="01378">中国宏桥</button>
+        </div>
+      </div>
+      <div id="stockContent"><div class="panel loading-panel">正在加载个股数据…</div></div>
+    </section>
+
+    <!-- ============ 筛选 ============ -->
+    <section class="view" id="view-screener" hidden>
+      <div class="preset-row" id="presets"></div>
+      <div class="panel">
+        <div class="panel-head">
+          <div><span class="eyebrow">MULTI-FACTOR</span><h2>港股机会筛选</h2></div>
+          <div class="panel-tools">
+            <span class="asof">估值 × 回购 × 股息 × 动量 × 质量</span>
+            <button class="mini-btn" id="exportScreener"><svg><use href="#i-download"/></svg>CSV</button>
+          </div>
+        </div>
+        <div class="filter-grid">
+          <label class="field"><span>最小市值（亿港元）</span><input id="fMcap" type="number" value="30" step="10"></label>
+          <label class="field"><span>PE 上限</span><input id="fPe" type="number" placeholder="不限"></label>
+          <label class="field"><span>PB 上限</span><input id="fPb" type="number" placeholder="不限"></label>
+          <label class="field"><span>股息率下限（%）</span><input id="fDiv" type="number" placeholder="0"></label>
+          <label class="field"><span>近20日回购天数 ≥</span><input id="fDays" type="number" placeholder="0"></label>
+          <label class="field"><span>回购占市值 ≥（%）</span><input id="fYield" type="number" placeholder="0"></label>
+          <label class="field"><span>ROE 下限（%）</span><input id="fRoe" type="number" placeholder="不限"></label>
+          <label class="field"><span>52周位置 ≤（%）</span><input id="fPos" type="number" placeholder="100"></label>
+          <label class="field"><span>行业</span><select id="fSector"><option value="">全部</option></select></label>
+          <label class="check wide"><input type="checkbox" id="fBelowVwap"><span>仅看现价低于回购均价</span></label>
+          <label class="check"><input type="checkbox" id="fWatchOnly"><span>仅看我的自选</span></label>
+          <button class="primary-btn" id="fApply">运行筛选</button>
+          <button class="ghost-btn" id="fReset">重置</button>
+        </div>
+        <div class="screener-summary" id="screenerSummary"></div>
+        <div id="screenerTable" class="table-host"></div>
+      </div>
+    </section>
+
+    <footer class="page-foot">
+      <span>HARBOR · 港股投研台</span>
+      <span>数据来自港交所、腾讯财经与公开接口，仅供研究，不构成投资建议。</span>
+      <span id="footSync">—</span>
+    </footer>
+  </main>
+</div>
+
+<div class="boot" id="bootOverlay" hidden>
+  <div class="boot-card">
+    <div class="brand big"><div class="brand-mark"><span></span><span></span><span></span></div><div><div class="brand-name">HARBOR</div><div class="brand-sub">港股投研台</div></div></div>
+    <h2>正在建立本地投研数据库</h2>
+    <p id="bootMsg">首次启动需要同步港交所回购报告与全市场行情，约 1–3 分钟。</p>
+    <div class="boot-track"><div id="bootBar"></div></div>
+    <div class="boot-meta"><span id="bootPct">0%</span><span id="bootCount"></span></div>
+  </div>
+</div>
+
+<div class="drawer-mask" id="watchMask" hidden></div>
+<aside class="drawer" id="watchDrawer" hidden>
+  <div class="drawer-head">
+    <div><span class="eyebrow">WATCHLIST</span><h2>我的自选</h2></div>
+    <button class="icon-btn" id="closeWatch" title="关闭"><svg><use href="#i-close"/></svg></button>
+  </div>
+  <div class="drawer-body" id="watchBody"></div>
+  <div class="drawer-foot">自选保存在本地浏览器 · 点击股票进入透视</div>
+</aside>
+
+<div class="modal" id="aboutModal" hidden>
+  <div class="modal-card">
+    <div class="modal-head">
+      <div><span class="eyebrow">ABOUT THE DATA</span><h2>数据口径与开源方案</h2></div>
+      <button class="icon-btn" id="closeAbout"><svg><use href="#i-close"/></svg></button>
+    </div>
+    <div class="modal-body" id="aboutBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/static/vendor/echarts.min.js"></script>
+<script src="/static/js/app.js?v=3.1"></script>
+</body>
+</html>
