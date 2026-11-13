@@ -170,6 +170,8 @@ def _conclusions(quote: dict, fund: dict, bb20: dict, bb60: dict, tech: dict,
                             f"利润滚动环比 {fund.get('profit_growth') or 0:+.1f}%。"})
 
     div = quote.get("dividend_yield") or fund.get("dividend_yield") or 0
+    if not (0 <= div <= 50):
+        div = 0
     buy_yield = bb60.get("yield_pct") or 0
     if div or buy_yield:
         tone = "pos" if div + buy_yield >= 8 else "neu"
@@ -262,6 +264,8 @@ def stock_detail(code: str) -> dict | None:
     pe = quote.get("pe") or fund.get("pe")
     pb = quote.get("pb") or fund.get("pb")
     div = quote.get("dividend_yield") or fund.get("dividend_yield")
+    if div is not None and not (0 <= div <= 50):
+        div = None
     pe_pct = percentile_rank(pe_list, pe) if pe and pe > 0 else None
     pb_pct = percentile_rank(pb_list, pb) if pb and pb > 0 else None
     div_pct = percentile_rank(div_list, div) if div and div > 0 else None

@@ -104,6 +104,50 @@ def _behavior(notices: list[dict]) -> dict:
     return out
 
 
+def _unique_holders(holders: list[dict]) -> list[dict]:
+    """Collapse one underlying share block that is disclosed under several
+    names (family trusts, holding companies, joint interests)."""
+    out: list[dict] = []
+    seen: list[float] = []
+    for h in sorted(holders, key=lambda x: x.get("pct") or 0, reverse=True):
+        sh = h.get("shares") or 0
+        dup = False
+        if sh > 0:
+            for s in seen:
+                if s and abs(sh - s) <= s * 0.015:
+                    dup = True
+                    break
+        if not dup:
+            out.append(h)
+            if sh > 0:
+                seen.append(sh)
+    return out
+
+
+def _summarize(holders: list[dict], notices: list[dict]) -> tuple[dict, list[dict]]:
+    uniq = _unique_holders(holders)
+    foreign_types = {"外资机构", "外资战略", "主权基金"}
+    top5_raw = sum((h.get("pct") or 0) for h in uniq[:5])
+    foreign_raw = sum((h.get("pct") or 0) for h in uniq if h["holder_type"] in foreign_types)
+    china_raw = sum((h.get("pct") or 0) for h in uniq if h["holder_type"] == "中资机构")
+    founder_raw = sum((h.get("pct") or 0) for h in uniq if h["holder_type"] == "创始人/管理层")
+    overlap = max(top5_raw, foreign_raw, china_raw, founder_raw) > 100.5
+    summary = {
+        "top5_pct": round(min(100.0, top5_raw), 2),
+        "foreign_pct": round(min(100.0, foreign_raw), 2),
+        "china_pct": round(min(100.0, china_raw), 2),
+        "founder_pct": round(min(100.0, founder_raw), 2),
+        "top5_raw": round(top5_raw, 2),
+        "overlap": overlap,
+        "holder_count": len(holders),
+        "unique_count": len(uniq),
+        "foreign_count": sum(1 for h in uniq if h["holder_type"] in foreign_types),
+        "foreign_top": next((h for h in uniq if h["holder_type"] in foreign_types), None),
+        **_behavior(notices),
+    }
+    return summary, uniq
+
+
 def _number(value: str | None) -> float | None:
     if not value:
         return None
@@ -277,21 +321,12 @@ def fetch_shareholders(code: str, years: int = 3) -> dict:
     notices.sort(key=lambda x: x.get("date") or "", reverse=True)
 
     holders.sort(key=lambda x: x.get("pct") or 0, reverse=True)
-    foreign_types = {"外资机构", "外资战略", "主权基金"}
-    summary = {
-        "top5_pct": round(sum((h.get("pct") or 0) for h in holders[:5]), 2),
-        "foreign_pct": round(sum((h.get("pct") or 0) for h in holders if h["holder_type"] in foreign_types), 2),
-        "china_pct": round(sum((h.get("pct") or 0) for h in holders if h["holder_type"] == "中资机构"), 2),
-        "founder_pct": round(sum((h.get("pct") or 0) for h in holders if h["holder_type"] == "创始人/管理层"), 2),
-        "holder_count": len(holders),
-        "foreign_count": sum(1 for h in holders if h["holder_type"] in foreign_types),
-        "foreign_top": next((h for h in holders if h["holder_type"] in foreign_types), None),
-        **_behavior(notices),
-    }
+    summary, holders_unique = _summarize(holders, notices)
     return {
         "code": code,
         "corp_name": corp_name,
         "holders": holders,
+        "holders_unique": holders_unique,
         "notices": notices[:40],
         "summary": summary,
         "source_url": links.get("consolidated") or links.get("notices") or SEARCH_URL,
@@ -331,21 +366,12 @@ def _load(code: str, error: str | None = None) -> dict | None:
         return None
     holders = query("SELECT * FROM shareholders WHERE code=? ORDER BY pct DESC", (code,))
     notices = query("SELECT * FROM shareholder_notices WHERE code=? ORDER BY date DESC LIMIT 40", (code,))
-    foreign_types = {"外资机构", "外资战略", "主权基金"}
-    summary = {
-        "top5_pct": round(sum((h.get("pct") or 0) for h in holders[:5]), 2),
-        "foreign_pct": round(sum((h.get("pct") or 0) for h in holders if h["holder_type"] in foreign_types), 2),
-        "china_pct": round(sum((h.get("pct") or 0) for h in holders if h["holder_type"] == "中资机构"), 2),
-        "founder_pct": round(sum((h.get("pct") or 0) for h in holders if h["holder_type"] == "创始人/管理层"), 2),
-        "holder_count": len(holders),
-        "foreign_count": sum(1 for h in holders if h["holder_type"] in foreign_types),
-        "foreign_top": next((h for h in holders if h["holder_type"] in foreign_types), None),
-        **_behavior(notices),
-    }
+    summary, holders_unique = _summarize(holders, notices)
     return {
         "code": code,
         "corp_name": meta.get("corp_name"),
         "holders": holders,
+        "holders_unique": holders_unique,
         "notices": notices,
         "summary": summary,
         "source_url": meta.get("source_url"),

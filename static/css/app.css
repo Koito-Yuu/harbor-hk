@@ -586,3 +586,6 @@ h1,h2,h3,p{margin:0}
 .sync-menu span{display:block;font-size:11px;color:var(--dim);margin-top:2px}
 .sync-menu-foot{border-top:1px solid var(--line-soft);margin-top:4px;padding:8px 12px 4px;font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:560px){.sync-btn span{display:none}.sync-btn{padding:0 10px}.sync-menu{width:250px}}
+.sync-btn{min-width:104px;justify-content:center}
+.sync-btn span{max-width:132px;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:560px){.sync-btn{min-width:36px;width:36px;padding:0;justify-content:center}}

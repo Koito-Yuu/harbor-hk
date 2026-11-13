@@ -281,3 +281,5 @@ html[data-theme="light"] .ht-dot{box-shadow:0 0 0 3px #fff}
 html[data-theme="light"] .sync-btn{background:#fff;border-color:var(--line)}
 html[data-theme="light"] .sync-caret{background:#fff;border-color:var(--line)}
 html[data-theme="light"] .sync-menu{background:#fff;border-color:var(--line);box-shadow:0 18px 42px rgba(16,27,45,.14)}
+.peers-panel{margin-top:14px}
+.hrb-value sup{font-size:10px;color:var(--gold);margin-left:2px}

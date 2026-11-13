@@ -127,6 +127,9 @@ def parse_report(path: Path, report_date: str) -> tuple[str | None, list[tuple]]
         high = _to_num(r["high_price"])
         low = _to_num(r["low_price"])
         total = _to_num(r["total_repurchased"])
+        pct_issued = _to_num(r["pct_issued"])
+        if pct_issued is not None and not (0 <= pct_issued <= 100):
+            pct_issued = None
         amount, amount_ok = _quality_amount(shares, total, amount, high, low)
         rows.append((
             td_iso, code, report_date, name,
@@ -135,7 +138,7 @@ def parse_report(path: Path, report_date: str) -> tuple[str | None, list[tuple]]
             amount, currency, method,
             total, _to_num(r["for_cancellation"]),
             _to_num(r["for_treasury"]), _to_num(r["mandate_repurchased"]),
-            _to_num(r["pct_issued"]), amount_ok,
+            pct_issued, amount_ok,
         ))
         trade_dates.append(td_iso)
     return (max(trade_dates) if trade_dates else None), rows

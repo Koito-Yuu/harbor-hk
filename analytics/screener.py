@@ -47,6 +47,8 @@ def enrich_rows(quotes: list[dict], ctx: dict) -> list[dict]:
         pe = q["pe"] if q["pe"] is not None else f.get("pe")
         pb = q["pb"] if q["pb"] is not None else f.get("pb")
         div = q["dividend_yield"] if q["dividend_yield"] is not None else f.get("dividend_yield")
+        if div is not None and not (0 <= div <= 50):
+            div = None
         pos = None
         if q["high52"] and q["low52"] is not None and q["high52"] > q["low52"]:
             raw_pos = (q["price"] - q["low52"]) / (q["high52"] - q["low52"]) * 100

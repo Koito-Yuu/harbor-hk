@@ -60,6 +60,9 @@ def fetch_fundamental(code: str) -> dict | None:
         "pb": _f(_pick(df, ["市净率"])),
         "market_cap": _f(_pick(df, ["总市值"])),
     }
+    dy = row["dividend_yield"]
+    if dy is not None and not (0 <= dy <= 50):
+        row["dividend_yield"] = None
     row["code"] = code
     return row
 

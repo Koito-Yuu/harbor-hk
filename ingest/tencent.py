@@ -47,6 +47,9 @@ def parse_quote_line(line: str) -> dict | None:
     raw_code = p[2].strip()
     code = raw_code if raw_code.upper() in {"HSI", "HSCEI", "HSTECH"} else raw_code.zfill(5)
     quote_date = p[30][:10].replace("/", "-") if p[30] else None
+    dy = _num(p[47])
+    if dy is not None and not (0 <= dy <= 50):
+        dy = None
     return {
         "code": code,
         "name": p[1].strip(),
@@ -58,7 +61,7 @@ def parse_quote_line(line: str) -> dict | None:
         "amount": _num(p[37]),
         "pe": _num(p[39]),
         "market_cap": (_num(p[44]) or 0) * 1e8 if _num(p[44]) is not None else None,
-        "dividend_yield": _num(p[47]),
+        "dividend_yield": dy,
         "pb": _num(p[58]),
         "high52": _num(p[48]),
         "low52": _num(p[49]),

@@ -403,6 +403,25 @@
     state.stock = null;
   }
 
+  async function refreshAll() {
+    try {
+      const meta = await api('/api/meta');
+      state.meta = meta;
+      applyMeta(meta);
+      resetDataCaches();
+      const cur = state.view;
+      if (cur === 'overview') await loadOverview();
+      else if (cur === 'buyback') await loadBuyback();
+      else if (cur === 'short') await loadShort();
+      else if (cur === 'signals') await loadSignals();
+      else if (cur === 'macro') await loadMacro();
+      else if (cur === 'stock') await loadStock(state.stockCode || '00700');
+      else if (cur === 'screener') await loadScreener(state.screenerPreset);
+    } catch (err) {
+      toast(err.message);
+    }
+  }
+
   async function pollSync(kind) {
     clearTimeout(state.syncTimer);
     try {
@@ -440,8 +459,9 @@
         const last = s.last_sync || {};
         const okSteps = (last.steps || []).filter(x => x.status === 'ok').map(x => `${x.label} ${x.seconds}s`);
         const detail = okSteps.length ? ` · ${okSteps.join(' · ')}` : '';
+        const warn = (last.warnings || []).length;
         toast(s.error ? '同步完成（部分数据源失败）'
-          : `同步完成 · ${last.seconds || '—'}s${detail}`, 4200);
+          : `同步完成 · ${last.seconds || '—'}s${detail}${warn ? ` · ${warn} 项数据告警` : ''}`, 4200);
         await refreshAll();
         updateSyncButton(await api('/api/sync/status'));
       }
@@ -1598,7 +1618,7 @@
         <div id="shareholderBody" class="holder-body"><div class="loading-panel">正在加载 5%+ 股东与增减持披露…</div></div>
       </div>
 
-      <div class="panel">
+      <div class="panel peers-panel">
         <div class="panel-head"><div><span class="eyebrow">PEERS</span><h2>同业对比</h2></div><span class="asof">${esc(d.sector || '')}</span></div>
         ${peersTable(d.peers)}
       </div>`;
@@ -1648,14 +1668,14 @@
       if (a >= 1e4) return (a / 1e4).toFixed(1) + '万';
       return int(a);
     };
-    const holders = d.holders.slice(0, 5);
+    const holders = (d.holders_unique || d.holders).slice(0, 5);
     const notices = (d.notices || []).slice(0, 8);
     const maxPct = Math.max(...holders.map(h => h.pct || 0), 1);
     const last = s.foreign_last;
     const netTone = v => (v == null ? 'soft' : v > 0 ? 'up' : v < 0 ? 'down' : 'soft');
     const netText = v => (v == null ? '—' : `${v > 0 ? '+' : v < 0 ? '-' : ''}${fmtN(v)} 股`);
     const ribbon = [
-      ['前五大合计', num(s.top5_pct, 2) + '%', C.gold, 'TOP 5'],
+      ['前五大合计', num(s.top5_pct, 2) + '%' + (s.overlap ? '*' : ''), C.gold, s.overlap ? '去重封顶' : '去重口径'],
       ['外资 / 战略', num(s.foreign_pct, 2) + '%', C.cyan, `近12月 ${netText(s.foreign_net_12m)}`],
       ['中资机构', num(s.china_pct, 2) + '%', C.up, `近12月 ${netText(s.china_net_12m)}`],
       ['创始人 / 管理层', num(s.founder_pct, 2) + '%', C.accent, '披露口径'],
@@ -1675,7 +1695,7 @@
       </div>
       <div class="holder-main">
         <div class="holder-list-wrap">
-          <div class="subhead">主要股东 <span>TOP 5 · 按持股比例</span></div>
+          <div class="subhead">主要股东 <span>TOP 5 · 按份额去重</span></div>
           <div class="holder-list">
             ${holders.map((h, i) => {
               const tone = holderTone(h.holder_type);
@@ -1696,7 +1716,7 @@
           </div>
         </div>
         <div class="holder-side">
-          <div class="subhead">类型分布 <span>按披露比例</span></div>
+          <div class="subhead">类型分布 <span>披露口径</span></div>
           <div class="chart holder-pie" id="chartHolders"></div>
           <div class="holder-moves">
             <div class="hm-row"><span>外资近12月</span><b class="${netTone(s.foreign_net_12m)}">${netText(s.foreign_net_12m)}</b></div>
@@ -1713,13 +1733,13 @@
             <span class="ht-dot ${n.direction === '增持' ? 'up' : n.direction === '减持' ? 'down' : ''}"></span>
             <div class="ht-main">
               <b>${esc(n.name)}</b>
-              <span>${fmtN(Math.abs(n.change_shares || 0))} 股 · 变动后 ${num(n.after_pct, 2)}%</span>
+              <span>${n.change_shares ? `${fmtN(Math.abs(n.change_shares))} 股 · ` : ''}变动后 ${num(n.after_pct, 2)}%</span>
             </div>
             <span class="ht-pill ${n.direction === '增持' ? 'up' : n.direction === '减持' ? 'down' : ''}">${esc(n.direction || '—')}</span>
           </div>`).join('')}
       </div>` : '<div class="empty" style="padding:18px"><span>近三年暂无权益披露变动</span></div>'}
-      <div class="holder-note">来源：HKEX 权益披露（DION）· 覆盖 5%+ 大股东及董事；类型按名称规则推断，不等同于基金季报的全部持仓。${d.error ? ' ' + esc(d.error) : ''}</div>`;
-    renderHolderPie(d.holders);
+      <div class="holder-note">来源：HKEX 权益披露（DION）· 覆盖 5%+ 大股东及董事；类型按名称规则推断，不等同于基金季报的全部持仓。${s.overlap ? '部分股东存在共同权益/多层披露，占比已按份额去重并封顶至 100%。' : ''}${d.error ? ' ' + esc(d.error) : ''}</div>`;
+    renderHolderPie(d.holders_unique || d.holders);
     setTimeout(resizeCharts, 50);
   }
 

@@ -28,8 +28,8 @@ PHASE_LABELS = {
 }
 MODE_STEPS = {
     "quick": ["quotes", "buybacks", "indices", "flows", "shorts"],
-    "full": ["universe", "quotes", "buybacks", "indices", "flows", "shorts",
-             "fundamentals", "klines"],
+    "full": ["quotes", "buybacks", "indices", "flows", "shorts",
+             "fundamentals", "klines", "universe"],
 }
 MODE_WEIGHTS = {
     "quick": {"quotes": 48, "buybacks": 28, "indices": 8, "flows": 7, "shorts": 9},
@@ -127,6 +127,22 @@ def _detail(phase: str, res) -> str:
     return ""
 
 
+def _bounds_warnings() -> list[str]:
+    checks = [
+        ("quotes", "dividend_yield", 50),
+        ("fundamentals", "dividend_yield", 50),
+        ("buybacks", "pct_issued", 100),
+        ("shareholders", "pct", 100),
+        ("shareholder_notices", "after_pct", 100),
+    ]
+    out = []
+    for table, col, hi in checks:
+        n = query(f"SELECT COUNT(*) c FROM {table} WHERE {col} IS NOT NULL AND ({col}<0 OR {col}>{hi})")[0]["c"]
+        if n:
+            out.append(f"{table}.{col} 越界 {n} 条")
+    return out
+
+
 def _run_step(phase: str, fn) -> str | None:
     label = PHASE_LABELS.get(phase, phase)
     _update(phase, f"开始{label}", 0, 1)
@@ -173,15 +189,19 @@ def _latest_quote_day() -> str | None:
     return row[0]["d"] if row else None
 
 
+def _universe_age() -> float:
+    try:
+        return time.time() - UNIVERSE_CACHE.stat().st_mtime
+    except OSError:
+        return 1e18
+
+
 def _sync_universe(force: bool) -> dict:
-    if not force and table_count("universe") > 0:
-        try:
-            if (time.time() - UNIVERSE_CACHE.stat().st_mtime) < 7 * 86400:
-                _skip("名录 7 天内已更新")
-        except OSError:
-            pass
+    age = _universe_age()
+    if not force and table_count("universe") > 0 and age < 7 * 86400:
+        _skip("名录 7 天内已更新")
     _update("universe", "同步港交所证券名录", 0, 1)
-    return sync_universe()
+    return sync_universe(force=force or age >= 7 * 86400)
 
 
 def _sync_quotes() -> dict:
@@ -295,8 +315,10 @@ def run_sync(mode: str = "quick", force_buybacks: bool = False, force: bool = Fa
         if err:
             errors.append(f"{phase}: {err}")
 
+    warnings = _bounds_warnings()
     summary = {
         "mode": mode,
+        "warnings": warnings,
         "seconds": round(time.time() - t0, 1),
         "quotes": table_count("quotes"),
         "buybacks": table_count("buybacks"),
@@ -306,6 +328,8 @@ def run_sync(mode: str = "quick", force_buybacks: bool = False, force: bool = Fa
         "errors": errors,
         "finished_at": now_str(),
     }
+    if warnings:
+        print("DATA WARNINGS:", warnings)
     set_meta("last_sync", summary)
     with _LOCK:
         STATE.update({

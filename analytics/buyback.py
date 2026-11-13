@@ -12,6 +12,10 @@ def _quote_map() -> dict[str, dict]:
     return {r["code"]: r for r in query("SELECT * FROM quotes")}
 
 
+def _valid_pct(v):
+    return v if v is not None and 0 <= v <= 100 else None
+
+
 def _name_fallback() -> dict[str, str]:
     rows = query(
         "SELECT b.code, b.name_en FROM buybacks b JOIN ("
@@ -109,7 +113,7 @@ def buyback_rows(period: int = 20, end: str | None = None,
             "days": r["days"],
             "last_date": r["last_date"],
             "streak": streaks.get(code, 0),
-            "pct_issued": r["pct_issued"],
+            "pct_issued": _valid_pct(r["pct_issued"]),
             "price": price,
             "change_pct": qq.get("change_pct"),
             "market_cap": mcap,
@@ -312,7 +316,7 @@ def stock_history(code: str, days: int = 260, currency: str = "HKD") -> dict:
             "shares": r["shares"],
             "amount": r["amount"],
             "vwap": (r["amount"] / r["shares"]) if r["shares"] else None,
-            "pct_issued": r["pct_issued"],
+            "pct_issued": _valid_pct(r["pct_issued"]),
             "cum_amount": cum_amount,
             "cum_shares": cum_shares,
         })
@@ -357,7 +361,7 @@ def stock_stats(code: str, period: int = 20) -> dict:
         "shares": row["shares"],
         "days": row["days"] or 0,
         "last_date": row["last_date"],
-        "pct_issued": row["pct_issued"],
+        "pct_issued": _valid_pct(row["pct_issued"]),
         "vwap": vwap,
         "yield_pct": yield_pct,
         "yield_annual": (yield_pct * 252 / period) if yield_pct is not None and period else None,
